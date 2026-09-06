@@ -28,7 +28,26 @@ jobs:
         working-directory: frontend
         run: npm run build
 
-      - name: 5. Configure SSH Key
+      - name: 5. Verify Secrets Presence
+        env:
+          HAS_KEY: ${{ secrets.SSH_PRIVATE_KEY != '' }}
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+          PORT: ${{ secrets.SSH_PORT }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+        run: |
+          echo "=== Secrets Diagnostic ==="
+          echo "SSH_HOST: '$HOST'"
+          echo "SSH_USER: '$USER'"
+          echo "SSH_PORT: '$PORT'"
+          echo "TARGET_DIR: '$TARGET'"
+          echo "SSH_PRIVATE_KEY Present: $HAS_KEY"
+          if [ "$HAS_KEY" != "true" ] || [ -z "$HOST" ] || [ -z "$USER" ]; then
+            echo "ERROR: Required SSH secrets are missing or empty! Please ensure they are added as 'Repository secrets'."
+            exit 1
+          fi
+
+      - name: 6. Configure SSH Key
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
@@ -37,7 +56,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT || 65002 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 6. Ensure Server Directories Exist
+      - name: 7. Ensure Server Directories Exist
         run: |
           ssh -v -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
