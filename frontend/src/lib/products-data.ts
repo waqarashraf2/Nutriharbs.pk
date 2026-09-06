@@ -677,3 +677,91 @@ export const PAKISTAN_CITIES = [
   { name: 'Mirpur (AJK)', province: 'Azad Kashmir', deliveryDays: '2-4 Days', courierFee: 250 },
   { name: 'Gilgit', province: 'Gilgit-Baltistan', deliveryDays: '3-5 Days', courierFee: 300 }
 ];
+
+// Dynamic In-Memory & LocalStorage Storefront Getters / Setters
+export function getStoreProducts(): Product[] {
+  if (typeof window === 'undefined') {
+    return PRODUCTS;
+  }
+  try {
+    const custom = localStorage.getItem('nutriherbs_custom_products');
+    if (custom) {
+      const parsed: Product[] = JSON.parse(custom);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load custom products', e);
+  }
+  return PRODUCTS;
+}
+
+export function getStoreCategories(): typeof HEALTH_GOALS {
+  if (typeof window === 'undefined') {
+    return HEALTH_GOALS;
+  }
+  try {
+    const custom = localStorage.getItem('nutriherbs_custom_categories');
+    if (custom) {
+      const parsed = JSON.parse(custom);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load custom categories', e);
+  }
+  return HEALTH_GOALS;
+}
+
+export function saveStoreProduct(product: Product): Product[] {
+  if (typeof window === 'undefined') return PRODUCTS;
+  const current = getStoreProducts();
+  const index = current.findIndex(p => p.id === product.id || p.slug === product.slug);
+  let updated: Product[];
+  if (index >= 0) {
+    updated = [...current];
+    updated[index] = product;
+  } else {
+    updated = [product, ...current];
+  }
+  localStorage.setItem('nutriherbs_custom_products', JSON.stringify(updated));
+  window.dispatchEvent(new Event('nutriherbs_products_updated'));
+  return updated;
+}
+
+export function deleteStoreProduct(productId: string): Product[] {
+  if (typeof window === 'undefined') return PRODUCTS;
+  const current = getStoreProducts();
+  const updated = current.filter(p => p.id !== productId);
+  localStorage.setItem('nutriherbs_custom_products', JSON.stringify(updated));
+  window.dispatchEvent(new Event('nutriherbs_products_updated'));
+  return updated;
+}
+
+export function saveStoreCategory(category: { id: string; title: string; icon: string; count: number; desc: string }): typeof HEALTH_GOALS {
+  if (typeof window === 'undefined') return HEALTH_GOALS;
+  const current = getStoreCategories();
+  const index = current.findIndex(c => c.id === category.id);
+  let updated: typeof HEALTH_GOALS;
+  if (index >= 0) {
+    updated = [...current];
+    updated[index] = category;
+  } else {
+    updated = [...current, category];
+  }
+  localStorage.setItem('nutriherbs_custom_categories', JSON.stringify(updated));
+  window.dispatchEvent(new Event('nutriherbs_categories_updated'));
+  return updated;
+}
+
+export function deleteStoreCategory(categoryId: string): typeof HEALTH_GOALS {
+  if (typeof window === 'undefined') return HEALTH_GOALS;
+  const current = getStoreCategories();
+  const updated = current.filter(c => c.id !== categoryId);
+  localStorage.setItem('nutriherbs_custom_categories', JSON.stringify(updated));
+  window.dispatchEvent(new Event('nutriherbs_categories_updated'));
+  return updated;
+}
+

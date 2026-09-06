@@ -9,7 +9,8 @@ import {
   ShieldCheck, 
   HeartPulse 
 } from 'lucide-react';
-import { HEALTH_GOALS } from '@/lib/products-data';
+import { HEALTH_GOALS, getStoreCategories } from '@/lib/products-data';
+import { HealthGoalCategory } from '@/lib/types';
 
 interface HealthGoalsGridProps {
   selectedGoal: string | null;
@@ -17,6 +18,15 @@ interface HealthGoalsGridProps {
 }
 
 export default function HealthGoalsGrid({ selectedGoal, onSelectGoal }: HealthGoalsGridProps) {
+  const [categories, setCategories] = React.useState<HealthGoalCategory[]>(HEALTH_GOALS);
+
+  React.useEffect(() => {
+    setCategories(getStoreCategories());
+    const handleUpdate = () => setCategories(getStoreCategories());
+    window.addEventListener('nutriherbs_categories_updated', handleUpdate);
+    return () => window.removeEventListener('nutriherbs_categories_updated', handleUpdate);
+  }, []);
+
   const getIcon = (iconName: string) => {
     switch (iconName) {
       case 'Sparkles': return <Sparkles className="w-6 h-6" />;
@@ -67,7 +77,7 @@ export default function HealthGoalsGrid({ selectedGoal, onSelectGoal }: HealthGo
             </div>
           </button>
 
-          {HEALTH_GOALS.map((goal) => {
+          {categories.map((goal) => {
             const isSelected = selectedGoal === goal.title;
             return (
               <button

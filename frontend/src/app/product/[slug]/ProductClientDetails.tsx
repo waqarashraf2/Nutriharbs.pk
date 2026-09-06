@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { 
@@ -28,18 +28,28 @@ import { useCartStore } from '@/lib/cart-store';
 import ProductCard from '@/components/ProductCard';
 import RichArticleRenderer from '@/components/RichArticleRenderer';
 import ShareProductModal from '@/components/ShareProductModal';
+import { getStoreProducts } from '@/lib/products-data';
 
 interface ProductClientDetailsProps {
   product: Product;
   crossSell: Product[];
 }
 
-export default function ProductClientDetails({ product, crossSell }: ProductClientDetailsProps) {
+export default function ProductClientDetails({ product: initialProduct, crossSell }: ProductClientDetailsProps) {
+  const [product, setProduct] = useState<Product>(initialProduct);
   const [selectedPack, setSelectedPack] = useState<1 | 2 | 3>(1);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'facts' | 'science' | 'timeline' | 'faqs'>('facts');
   const [added, setAdded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+
+  useEffect(() => {
+    const store = getStoreProducts();
+    const found = store.find((p) => p.slug === initialProduct.slug || p.id === initialProduct.id);
+    if (found) {
+      setProduct(found);
+    }
+  }, [initialProduct]);
 
   const { addItem } = useCartStore();
 

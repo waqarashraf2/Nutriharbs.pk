@@ -21,27 +21,36 @@ import HealthGoalsGrid from '@/components/HealthGoalsGrid';
 import ProductCard from '@/components/ProductCard';
 import PurityGuarantee from '@/components/PurityGuarantee';
 import ReviewsSection from '@/components/ReviewsSection';
-import { PRODUCTS } from '@/lib/products-data';
+import { PRODUCTS, getStoreProducts } from '@/lib/products-data';
+import { Product } from '@/lib/types';
 
 export default function HomePage() {
+  const [productsList, setProductsList] = useState<Product[]>(PRODUCTS);
   const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'all' | 'bestsellers' | 'hair-skin' | 'bone-joint' | 'men' | 'weight'>('all');
 
+  React.useEffect(() => {
+    setProductsList(getStoreProducts());
+    const handleUpdate = () => setProductsList(getStoreProducts());
+    window.addEventListener('nutriherbs_products_updated', handleUpdate);
+    return () => window.removeEventListener('nutriherbs_products_updated', handleUpdate);
+  }, []);
+
   // Filter products based on selectedGoal or activeTab
-  const filteredProducts = PRODUCTS.filter((product) => {
+  const filteredProducts = productsList.filter((product) => {
     if (selectedGoal) {
       return product.healthGoal.toLowerCase().includes(selectedGoal.toLowerCase());
     }
 
     if (activeTab === 'bestsellers') return product.isBestSeller;
-    if (activeTab === 'hair-skin') return product.healthGoal === 'Hair & Skin';
-    if (activeTab === 'bone-joint') return product.healthGoal === 'Bone & Joint';
-    if (activeTab === 'men') return product.healthGoal === "Men's Vitality";
-    if (activeTab === 'weight') return product.healthGoal === 'Weight Management';
+    if (activeTab === 'hair-skin') return product.healthGoal.toLowerCase().includes('hair') || product.healthGoal.toLowerCase().includes('skin');
+    if (activeTab === 'bone-joint') return product.healthGoal.toLowerCase().includes('bone') || product.healthGoal.toLowerCase().includes('joint');
+    if (activeTab === 'men') return product.healthGoal.toLowerCase().includes('men');
+    if (activeTab === 'weight') return product.healthGoal.toLowerCase().includes('weight') || product.healthGoal.toLowerCase().includes('detox');
     return true;
   });
 
-  const bestSellers = PRODUCTS.filter(p => p.isBestSeller).slice(0, 4);
+  const bestSellers = productsList.filter(p => p.isBestSeller).slice(0, 4);
 
   const faqs = [
     {

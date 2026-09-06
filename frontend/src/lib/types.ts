@@ -53,6 +53,14 @@ export interface Product {
   isTrending?: boolean;
 }
 
+export interface HealthGoalCategory {
+  id: string;
+  title: string;
+  icon: string;
+  count: number;
+  desc: string;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;

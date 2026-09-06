@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import AnnouncementBar from '@/components/AnnouncementBar';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
@@ -80,7 +79,6 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased min-h-screen flex flex-col bg-white text-slate-800">
-        <AnnouncementBar />
         <Navbar />
         <main className="flex-1">
           {children}
