@@ -29,15 +29,17 @@ jobs:
         run: npm run build
 
       - name: 5. Configure SSH Key
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SSH_PORT || 65002 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
       - name: 6. Ensure Server Directories Exist
         run: |
-          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no \
+          ssh -v -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
             "mkdir -p ${{ secrets.TARGET_DIR }} ~/nutriharbs-backend"
 
