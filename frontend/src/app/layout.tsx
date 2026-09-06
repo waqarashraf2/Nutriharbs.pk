@@ -5,7 +5,7 @@ import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://nutriherbs.pk'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://nutriharbs.versenext.com'),
   title: 'Nutriherbs | All Pure - All Natural Herbal Supplements Pakistan',
   description: 'Shop 100% pure botanical nutraceuticals, marine collagen, biotin, calcium & multivitamins. DRAP enlisted, certified GMP labs with nationwide Cash on Delivery in Pakistan.',
   keywords: [
@@ -31,20 +31,34 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: 'Nutriherbs - All Pure, All Natural',
-    description: 'Pakistan\'s premier herbal nutraceutical brand. Free delivery on orders above Rs. 2,000.',
-    url: 'https://nutriherbs.pk',
+    title: 'Nutriherbs - All Pure • All Natural | Official Store',
+    description: '100% pure botanical nutraceuticals, marine collagen, biotin & multivitamins. DRAP enlisted certified labs with nationwide Cash on Delivery in Pakistan.',
+    url: 'https://nutriharbs.versenext.com',
     siteName: 'Nutriherbs Pakistan',
     images: [
       {
-        url: '/images/logo.png',
-        width: 800,
-        height: 600,
-        alt: 'Nutriherbs Pakistan Official Logo',
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Nutriherbs Pakistan - All Pure, All Natural Herbal Supplements',
+        type: 'image/jpeg',
+      },
+      {
+        url: '/images/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Nutriherbs Pakistan - 100% Botanical Extracts',
+        type: 'image/jpeg',
       },
     ],
     locale: 'en_PK',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Nutriherbs - All Pure • All Natural',
+    description: 'Shop 100% pure botanical nutraceuticals in Pakistan. DRAP certified with nationwide Cash on Delivery.',
+    images: ['/og-image.jpg'],
   },
 };
 
