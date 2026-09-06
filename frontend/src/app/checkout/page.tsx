@@ -132,7 +132,8 @@ export default function CheckoutPage() {
 
     // Try posting to Laravel Backend API if running, else save locally
     try {
-      await fetch('http://localhost:8000/api/orders', {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || '/api';
+      await fetch(`${apiBase}/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
@@ -155,8 +156,8 @@ export default function CheckoutPage() {
     });
 
     clearCart();
-    setIsSubmitting(false);
-    router.push(`/order-success/${orderNumber}`);
+    // Navigate to order success page
+    router.push(`/order-success?id=${orderNumber}`);
   };
 
   return (

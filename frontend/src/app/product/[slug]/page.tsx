@@ -9,6 +9,12 @@ interface PageProps {
 }
 
 // Dynamic SEO Metadata Generator for every individual Product URL
+export function generateStaticParams() {
+  return PRODUCTS.map((product) => ({
+    slug: product.slug,
+  }));
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = PRODUCTS.find((p) => p.slug === slug);

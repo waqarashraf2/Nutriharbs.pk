@@ -1,29 +1,26 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
   CheckCircle2, 
   Printer, 
   Truck, 
-  MapPin, 
-  PhoneCall, 
-  Download, 
   ShieldCheck, 
-  ArrowRight,
-  Clock,
-  PackageCheck
+  ArrowRight
 } from 'lucide-react';
 
-export default function OrderSuccessPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
+function OrderSuccessContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id') || '';
   const [order, setOrder] = useState<any>(null);
 
   useEffect(() => {
     // Look up order in localStorage
     const savedOrders = JSON.parse(localStorage.getItem('nutriherbs_orders') || '[]');
-    const matched = savedOrders.find((o: any) => o.orderNumber === resolvedParams.id);
+    const matched = id ? savedOrders.find((o: any) => o.orderNumber === id) : savedOrders[0];
     if (matched) {
       setOrder(matched);
     } else if (savedOrders.length > 0) {
@@ -31,11 +28,11 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
     } else {
       // Fallback preview
       setOrder({
-        orderNumber: resolvedParams.id,
-        customerName: 'Customer',
+        orderNumber: id || 'NH-PREVIEW',
+        customerName: 'Valued Customer',
         phone: '0300-1234567',
         city: 'Lahore',
-        address: 'Model Town, Lahore',
+        address: 'Delivery Address, Pakistan',
         paymentMethod: 'cod',
         subtotal: 3900,
         shippingFee: 0,
@@ -55,7 +52,7 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
         ]
       });
     }
-  }, [resolvedParams.id]);
+  }, [id]);
 
   const handlePrintInvoice = () => {
     window.print();
@@ -272,5 +269,13 @@ export default function OrderSuccessPage({ params }: { params: Promise<{ id: str
 
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm font-semibold text-[#1B4D3E]">Loading order details...</div>}>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }
