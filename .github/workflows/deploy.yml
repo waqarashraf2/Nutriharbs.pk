@@ -1,0 +1,110 @@
+name: Deploy Nutriherbs to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Manual trigger support
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 3. Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: 4. Build Frontend (Static Export)
+        working-directory: frontend
+        run: npm run build
+
+      - name: 5. Configure SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SSH_PORT || 65002 }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 6. Ensure Server Directories Exist
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "mkdir -p ${{ secrets.TARGET_DIR }} ~/nutriharbs-backend"
+
+      - name: 7. Deploy Frontend to Public Document Root
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no" \
+            --exclude='.htaccess' \
+            --exclude='api/' \
+            frontend/out/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}/
+
+      - name: 8. Deploy Gateway Files (.htaccess & api/)
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no" \
+            deploy/.htaccess \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}/.htaccess
+
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no" \
+            deploy/api/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}/api/
+
+      - name: 9. Deploy Backend (Laravel) to Server
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no" \
+            --exclude='.env' \
+            --exclude='vendor/' \
+            --exclude='node_modules/' \
+            --exclude='storage/logs/*' \
+            --exclude='storage/framework/cache/*' \
+            --exclude='storage/framework/sessions/*' \
+            --exclude='storage/framework/views/*' \
+            --exclude='database/*.sqlite' \
+            backend/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/nutriharbs-backend/
+
+      - name: 10. Run Laravel Setup, Migrations & Cache Optimization
+        continue-on-error: true
+        run: |
+          ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 65002 }} -o StrictHostKeyChecking=no \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+              cd ~/nutriharbs-backend
+
+              # Ensure storage folders exist with write permissions
+              mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
+              chmod -R 775 storage bootstrap/cache
+
+              # Setup .env if it does not already exist
+              if [ ! -f .env ]; then
+                cp .env.example .env
+                php artisan key:generate --force
+              fi
+
+              # Install Composer dependencies if composer is available
+              if command -v composer &> /dev/null; then
+                composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+              fi
+
+              # Run database migrations
+              php artisan migrate --force || true
+
+              # Clear and rebuild cache
+              php artisan optimize:clear
+              php artisan config:cache || true
+              php artisan route:cache || true
+              php artisan view:cache || true
+            '
