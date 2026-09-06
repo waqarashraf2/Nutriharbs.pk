@@ -30,21 +30,25 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description = product.metaDescription || product.description;
   const keywords = product.keywords || ['herbal supplements Pakistan', product.title, 'DRAP certified'];
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nutriharbs.versenext.com';
+
   const imageUrl = product.image.startsWith('http')
     ? product.image
-    : `https://nutriherbs.pk${product.image}`;
+    : `${siteUrl}${product.image}`;
+
+  const canonicalUrl = `${siteUrl}/product/${product.slug}`;
 
   return {
     title,
     description,
     keywords,
     alternates: {
-      canonical: `https://nutriherbs.pk/product/${product.slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title,
       description,
-      url: `https://nutriherbs.pk/product/${product.slug}`,
+      url: canonicalUrl,
       siteName: 'Nutriherbs Pakistan',
       type: 'website',
       images: [
@@ -53,7 +57,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           width: 800,
           height: 800,
           alt: `${product.title} - Nutriherbs Pakistan`,
-          type: 'image/png',
+          type: 'image/webp',
         },
       ],
     },
@@ -77,15 +81,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
   // Related Cross-sell products
   const crossSell = PRODUCTS.filter((p) => p.id !== product.id).slice(0, 3);
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nutriharbs.versenext.com';
+
   // Full Rich JSON-LD Structured Data Schema for Google Search
   const jsonLd = {
     '@context': 'https://schema.org/',
     '@graph': [
       {
         '@type': 'Product',
-        '@id': `https://nutriherbs.pk/product/${product.slug}#product`,
+        '@id': `${siteUrl}/product/${product.slug}#product`,
         name: product.title,
-        image: [`https://nutriherbs.pk${product.image}`],
+        image: [`${siteUrl}${product.image}`],
         description: product.description,
         sku: product.id,
         mpn: product.drapRegNo,
@@ -95,7 +101,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         },
         offers: {
           '@type': 'Offer',
-          url: `https://nutriherbs.pk/product/${product.slug}`,
+          url: `${siteUrl}/product/${product.slug}`,
           priceCurrency: 'PKR',
           price: product.price,
           priceValidUntil: '2028-12-31',
@@ -121,19 +127,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
             '@type': 'ListItem',
             position: 1,
             name: 'Home',
-            item: 'https://nutriherbs.pk',
+            item: `${siteUrl}`,
           },
           {
             '@type': 'ListItem',
             position: 2,
             name: product.healthGoal,
-            item: 'https://nutriherbs.pk/#products',
+            item: `${siteUrl}/#products`,
           },
           {
             '@type': 'ListItem',
             position: 3,
             name: product.title,
-            item: `https://nutriherbs.pk/product/${product.slug}`,
+            item: `${siteUrl}/product/${product.slug}`,
           },
         ],
       },
