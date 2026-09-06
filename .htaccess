@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Route /api requests to api/index.php
+  RewriteRule ^api/(.*)$ api/index.php [L,QSA]
+  RewriteRule ^api$ api/index.php [L,QSA]
+
+  # 2. Serve existing static files & directories directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. Serve corresponding .html file if it exists (e.g. /checkout -> checkout.html)
+  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+  RewriteRule ^(.*)/?$ $1.html [L]
+
+  # 4. Fallback to index.html for Next.js client-side navigation
+  RewriteRule ^ index.html [L]
+</IfModule>

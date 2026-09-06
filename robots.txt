@@ -1,0 +1,12 @@
+User-Agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+User-Agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api/
+
+Host: https://nutriherbs.pk
+Sitemap: https://nutriherbs.pk/sitemap.xml
